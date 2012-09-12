@@ -1,0 +1,3 @@
+[submodule "libsam3s"]
+	path = libsam3s
+	url = git://github.com/maknoll/libsam3s.git
