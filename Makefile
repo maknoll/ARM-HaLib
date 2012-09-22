@@ -1,31 +1,53 @@
-TARGET = build/$(shell basename `pwd`).elf
-AS = arm-none-eabi-gcc
-CC = arm-none-eabi-gcc
-CXX = arm-none-eabi-g++
-LD = arm-none-eabi-gcc
-CCFLAGS = -mcpu=cortex-m3 -mthumb -I include -g -D "F_CPU = 1000000" -ffreestanding \
-				-fno-strict-aliasing \
-			    -fno-exceptions \
-			    -fno-rtti \
-				-fno-threadsafe-statics
-LDFLAGS = -T libsam3s/link.ld
-DEBUGGER = arm-none-eabi-gdb
+TARGET     := build/$(shell basename `pwd`).elf
+TARGET_DIR := $(dir ${TARGET})
+TARGET_BIN := $(basename ${TARGET}).bin
+PREFIX     := arm-none-eabi-
+AS         := ${PREFIX}gcc
+CC         := ${PREFIX}gcc
+CXX        := ${PREFIX}g++
+LD         := ${PREFIX}ld
+OCPY       := ${PREFIX}objcopy
+OBJDUMP    := ${PREFIX}objdump
+ASFLAGS    := -Os -g\
+	          -mcpu=cortex-m3 \
+		      -mthumb \
+		      -I include \
+		      -D PLL_MUL=124 \
+		      -D PLL_DIV=38 \
+		      -D F_XTAL=18432000ULL
+CFLAGS     := ${ASFLAGS} \
+		      -ffreestanding \
+		      -nostdlib \
+		      -fno-strict-aliasing \
+		      -fno-exceptions \
+		      -fno-threadsafe-statics
+CXXFLAGS   := ${CFLAGS} \
+ 		      -fno-rtti
+LDFLAGS    := -T ldscripts/link.ld
+LDPATHS    := 
+LIBS       := 
+DEBUGGER   := ${PREFIX}gdb
 
-all: build
+SOURCES    := $(wildcard ./src/*.c) $(wildcard ./src/*.cpp) $(wildcard ./src/*.S)
+OBJECTS    := $(foreach file, ${SOURCES}, ./build/$(notdir $(basename ${file})).o)
 
-build: $(TARGET)
+vpath %.c   ./src
+vpath %.S   ./src
+vpath %.cpp ./src
+
+all: ${TARGET}
+
+./build:
+	mkdir -p $@
 
 clean:
-	rm -r build/*
+	rm -r build
 
-debug: build
-	$(DEBUGGER) $(TARGET)
+debug: ${TARGET}
+	${DEBUGGER} ${TARGET}
 
 openocd: 
-	openocd -f debug.cfg &
-
-libsam3s: libsam3s/libsam3s.a
-	cd libsams3 & make
+	openocd -f openocd/debug.cfg &
 
 sim: build
 	qemu-system-arm \
@@ -34,19 +56,27 @@ sim: build
 	  -monitor null \
 	  -serial null \
 	  -s -S \
-	  -kernel $(TARGET) \
+	  -kernel ${TARGET} \
 	  -daemonize
 
-$(TARGET): 	$(patsubst src/%.c, build/%.o, $(wildcard src/*.c)) \
-			$(patsubst src/%.cpp, build/%.o, $(wildcard src/*.cpp)) \
-			$(patsubst src/%.S, build/%.o, $(wildcard src/*.S))
-	$(LD) $(LDFLAGS) -o $@ $^
+flash: ${TARGET_BIN}
+	openocd -f openocd/init.cfg -c "flash write_bank 0 ${TARGET_BIN} 0" -f openocd/shutdown.cfg
 
-build/%.o: src/%.c
-	$(CC) $(CCFLAGS) -c -o $@ $^
 
-build/%.o: src/%.cpp
-	$(CXX) $(CCFLAGS) -c -o $@ $^
+$(TARGET): 	${OBJECTS} | ./build
+	$(LD) ${LDFLAGS} -o $@  $^ ${LDPATHS} ${LIBS}
 
-build/%.o: src/%.S
-	$(AS) $(CCFLAGS) -c -o $@ $^
+${TARGET_BIN}: ${TARGET} | ./build
+	${OCPY} -O binary -j .text -j .data $< $@
+
+dump: ${TARGET}
+	${OBJDUMP} -Cdx $< > ${TARGET}.dump
+
+build/%.o: %.c | ./build
+	$(CC) ${CFLAGS} -c -o $@ $<
+
+build/%.o: %.cpp | ./build
+	$(CXX) ${CXXFLAGS} -c -o $@ $<
+
+build/%.o: %.S | ./build
+	$(AS) ${ASFLAGS} -c -o $@ $<
