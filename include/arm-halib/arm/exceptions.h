@@ -2,14 +2,6 @@ typedef void(*VecFunc)(void);
 
 extern "C"
 {
-    void badInterrupt(void)
-    {
-        *(volatile uint32_t*)0x400E0E00 = 0x1<< 19;
-        *(volatile uint32_t*)0x400E0E10 = 0x1<< 19;
-        *(volatile uint32_t*)0x400E0E30 = 0x1<< 19;
-        while(1);
-    }
-
     void NMI_Handler(void)        __attribute__ ((weak, alias("badInterrupt")));
     void HardFault_Handler(void)  __attribute__ ((weak, alias("badInterrupt")));
     void MemManage_Handler(void)  __attribute__ ((weak, alias("badInterrupt")));
