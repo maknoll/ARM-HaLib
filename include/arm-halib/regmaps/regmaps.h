@@ -83,11 +83,10 @@ struct RegMapUnification : public helpers::RegMapUnificationHelper<false,T>{};
 
 
 //Create RegMap for local usage
-#define UseRegMap(rm, RegMap) arm_halib::regmaps::base::RegMapUnification<RegMap> rm##Helper; \
-							  RegMap &rm=rm##Helper.create()
+#define UseRegMap(rm, RegMap) RegMap &rm=*(RegMap*)0
 
 //Sync complete RegMap
-#define SyncRegMap(rm) rm.sync()
+#define SyncRegMap(rm) asm("":::"memory")
 
 //Sync one Register of the complete RegMap
 #define SyncRegister(rm, Register) rm.sync((Register*)0)

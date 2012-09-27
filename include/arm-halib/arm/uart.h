@@ -65,7 +65,7 @@ namespace drivers{
                     //rm.ubbr  = (uint16_t)UBBRConfig::value - 1;
                     /* Configure baudrate */
                     /* Asynchronous, no oversampling */
-                    rm.brgr = (uint32_t)UBBRConfig::value - 1;
+
 
 
                     /* Configure PIO */
@@ -75,11 +75,16 @@ namespace drivers{
                     /* Reset and disable receiver & transmitter */
                     rm.rstrx = true;
                     rm.rsttx = true;
+                    SyncRegMap(rm);
                     rm.rxdis = true;
                     rm.txdis = true;
+                    SyncRegMap(rm);
 
                     /* Configure mode */
-                    rm.par = false;
+                    rm.par = 0;
+                    rm.chmode = 0;
+                    rm.brgr = (uint16_t)UBBRConfig::value;
+                    SyncRegMap(rm);
 
                     /* Disable PDC channel */
 
@@ -101,7 +106,7 @@ namespace drivers{
                 {
                   UseRegMap(rm, RegMap);
                   SyncRegMap(rm);
-                  return rm.isr.txrdy;
+                  return rm.sr.txrdy;
                 }
                 
                 /**	\brief	Reads a character from the input buffer
@@ -112,7 +117,7 @@ namespace drivers{
                 {
                     UseRegMap(rm, RegMap);
                     SyncRegMap(rm);
-                    if (rm.sr.txrdy)
+                    if (rm.sr.rxrdy)
                     {
                         c = rm.rhr;
                         return true;

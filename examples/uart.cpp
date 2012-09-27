@@ -14,15 +14,14 @@ struct Config : public avr_halib::drivers::Uart::DefaultConfig
 
 typedef avr_halib::drivers::Uart::configure<Config>::type Uart;
 
-Uart uart;
-
 int main(){
+/*    Uart uart;
     uint8_t c;
 	while(true){
         if(uart.get(c)){
             uart.put('\n');
             uart.put(c);
         }
-	}
+	}*/
     return 0;
 }
