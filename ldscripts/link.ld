@@ -53,7 +53,7 @@ SECTIONS
         __bss_end = .;
 	} > SRAM
 
-    __end = ORIGIN(SRAM) + LENGTH(SRAM) - 4;
+    __end = ORIGIN(SRAM) + LENGTH(SRAM);
     __data_load_start = LOADADDR(.data);
     __data_load_end = __data_load_start + SIZEOF(.data);
 }

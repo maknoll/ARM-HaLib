@@ -1,4 +1,13 @@
 #include <stdint.h>
+
+extern "C" void badInterrupt(void)
+{
+    *(volatile uint32_t*)0x400E0E00 = 0x1<< 19;
+    *(volatile uint32_t*)0x400E0E10 = 0x1<< 19;
+    *(volatile uint32_t*)0x400E0E34 = 0x1<< 19;
+    while(1);
+}
+
 #include "arm-halib/arm/exceptions.h"
 
 typedef void* StackPtr;
@@ -27,124 +36,135 @@ extern "C"
 
 typedef volatile uint32_t Register;
 
-static const char*    pmc           = (char*)0x400E0400U;
-static const uint32_t morOffset     = 0x20;
-static const uint32_t mckrOffset    = 0x30;
-static const uint32_t pllAOffset    = 0x28;
-static const uint32_t srOffset      = 0x68;
-static const uint32_t cssMask       = 0x3 << 0;
-static const uint32_t cssMain       = 0x1 << 0;
-static const uint32_t cssPllA       = 0x2 << 0;
-static const uint32_t pres2         = 0x1 << 4;
-static const uint32_t masterReady   = 0x1 << 3;
-static const uint32_t lockA         = 0x1 << 1;
-static const uint32_t pllOne        = 0x1 << 29;
-static const uint8_t  pllMulShift   = 16;
-static const uint32_t pllMulMask    = 0x7ff << pllMulShift;
-static const uint8_t  pllCountShift = 8;
-static const uint32_t pllCountMask  = 0x3f << pllCountShift;
-static const uint8_t  pllDivShift   = 0;
-static const uint32_t pllDivMask    = 0xff << pllDivShift;
-static const uint8_t  xtalWaitShift = 8;
-static const uint32_t selectXtal    = 1<<24;
-static const uint32_t xtalStable    = 1<<0;
-static const uint32_t rcStable    = 1<<1;
-static const uint32_t enableXtal    = 1<<0;
-static const uint32_t enableRC      = 1<<3;
-static const uint32_t key           = 0x37<<16;
-static const uint32_t selInProgress = 1<<16;
-static const uint32_t rc12MHz       = 0x2<<4;
+inline void frameSetup(void)        __attribute__((always_inline));
+inline void clockSetup(void)        __attribute__((always_inline));
+inline void copyData(void)          __attribute__((always_inline));
+inline void clearBSS(void)          __attribute__((always_inline));
+inline void initArray(void)         __attribute__((always_inline));
+inline void enterMain(void)         __attribute__((always_inline));
+
+inline void finiArray(void)         __attribute__((always_inline));
+inline void disableInterrupts(void) __attribute__((always_inline));
+inline void loop(void)              __attribute__((always_inline));
+
+void frameSetup(void)
+{
+    asm volatile("mov r7,sp");
+}
+
+void clockSetup(void)
+{
+    static Register* const eefcModeReg  = reinterpret_cast<Register*>(0x400E0A00);
+    static Register* const pmcMorReg    = reinterpret_cast<Register*>(0x400E0420);
+    static Register* const pmcMckrReg   = reinterpret_cast<Register*>(0x400E0430);
+    static Register* const pmcPllAReg   = reinterpret_cast<Register*>(0x400E0428);
+    static Register* const pmcSrReg     = reinterpret_cast<Register*>(0x400E0468);
+    static const uint32_t cssMask       = 0x3 << 0;
+    static const uint32_t cssMain       = 0x1 << 0;
+    static const uint32_t cssPllA       = 0x2 << 0;
+    static const uint32_t pres2         = 0x1 << 4;
+    static const uint32_t masterReady   = 0x1 << 3;
+    static const uint32_t lockA         = 0x1 << 1;
+    static const uint32_t pllOne        = 0x1 << 29;
+    static const uint8_t  pllMulShift   = 16;
+    static const uint32_t pllMulMask    = 0x7ff << pllMulShift;
+    static const uint8_t  pllCountShift = 8;
+    static const uint32_t pllCountMask  = 0x3f << pllCountShift;
+    static const uint8_t  pllDivShift   = 0;
+    static const uint32_t pllDivMask    = 0xff << pllDivShift;
+    static const uint8_t  xtalWaitShift = 8;
+    static const uint32_t selectXtal    = 1<<24;
+    static const uint32_t xtalStable    = 1<<0;
+    static const uint32_t rcStable      = 1<<1;
+    static const uint32_t enableXtal    = 1<<0;
+    static const uint32_t enableRC      = 1<<3;
+    static const uint32_t key           = 0x37<<16;
+    static const uint32_t selInProgress = 1<<16;
+    static const uint32_t rc12MHz       = 0x2<<4;
+
+    *eefcModeReg = 1<<8;
+
+    uint32_t timeout;
+
+    static const uint32_t pllConfig    = pllOne | ((PLL_MUL-1) << pllMulShift) | (1 << pllCountShift) | (PLL_DIV << pllDivShift);
+    static const uint32_t masterConfig = pres2 | cssPllA;
+    static const uint32_t xtalWaitCount = 8 << xtalWaitShift;
+
+    *pmcMorReg = key | enableRC | enableXtal | xtalWaitCount;
+    timeout=0;
+    while (!(*pmcSrReg & xtalStable) & timeout++<=0xFFFFFFFF);
+
+    *pmcMorReg = key | xtalWaitCount | enableRC | enableXtal | selectXtal;
+    timeout=0;
+    while (!(*pmcSrReg & selInProgress) & timeout++<=0xFFFFFFFF);
+
+    *pmcPllAReg = pllConfig;
+    timeout=0;
+    while(!(*pmcSrReg & lockA) & timeout++<=0xFFFFFFFF);
+
+    *pmcMckrReg = (masterConfig & ~cssMask) | cssMain;
+    timeout=0;
+    while(!(*pmcSrReg & masterReady) & timeout++<=0xFFFFFFFF);
+    
+    *pmcMckrReg = masterConfig;
+    timeout=0;
+    while(!(*pmcSrReg & masterReady) & timeout++<=0xFFFFFFFF);
+    
+}
+
+void copyData(void)
+{
+    uint32_t* srcPtr=&__data_start;
+    uint32_t* dstPtr=&__data_load_start;
+    while(srcPtr<&__data_end)
+        *srcPtr++ = *dstPtr++;
+}
+
+void clearBSS(void)
+{
+    uint32_t *ptr=&__bss_start;
+    while(ptr<&__bss_end)
+        *ptr++ = 0;  
+}
+void initArray(void)
+{
+    for(void **ptr = &__init_array_start;
+               ptr < &__init_array_end;
+               ptr++
+       )
+        ((InitFunc)*ptr)();
+
+}
+void enterMain(void)
+{
+    main();
+}
+
+void finiArray(void)
+{
+    for(void **ptr = &__fini_array_start;
+               ptr < &__fini_array_end;
+               ptr++
+        )
+        ((FiniFunc)*ptr)();
+
+}
+void disableInterrupts(void)
+{
+    asm volatile ("cpsid f");
+}
+void loop(void)
+{
+    while(1);
+}
 
 extern "C"
 {
-    void init(void)                     __attribute__((section(".init"),naked));
-    inline void clockSetup(void)        __attribute__((always_inline));
-    inline void copyData(void)          __attribute__((always_inline));
-    inline void clearBSS(void)          __attribute__((always_inline));
-    inline void initArray(void)         __attribute__((always_inline));
-    inline void enterMain(void)         __attribute__((always_inline));
-
-    inline void finiArray(void)         __attribute__((always_inline));
-    inline void disableInterrupts(void) __attribute__((always_inline));
-    inline void loop(void)              __attribute__((always_inline));
-
-    void clockSetup(void)
-    {
-        Register* mor  = (Register*)(pmc + morOffset);
-        Register* mckr = (Register*)(pmc + mckrOffset);
-        Register* plla = (Register*)(pmc + pllAOffset);
-        Register* sr   = (Register*)(pmc + srOffset);
-
-        static const uint32_t pllConfig    = pllOne | ((PLL_MUL-1) << pllMulShift) | (1 << pllCountShift) | (PLL_DIV << pllDivShift);
-        static const uint32_t masterConfig = pres2 | cssPllA;
-        static const uint32_t xtalWaitCount = 8 << xtalWaitShift;
-
-        *mor = key | enableRC | enableXtal | xtalWaitCount;
-        while (!(*sr & xtalStable));
-
-        *mor = key | xtalWaitCount | enableRC | enableXtal | selectXtal;
-        while (!(*sr & selInProgress));
-
-        *plla = pllConfig;
-        while(!(*sr & lockA));
-
-        *mckr = (masterConfig & ~cssMask) | cssMain;
-        while(!(*sr & masterReady));
-        
-        *mckr = masterConfig;
-        while(!(*sr & masterReady));
-        
-    }
-
-    void copyData(void)
-    {
-        uint32_t* srcPtr=&__data_start;
-        uint32_t* dstPtr=&__data_load_start;
-        while(srcPtr<&__data_end)
-            *srcPtr++ = *dstPtr++;
-    }
-
-    void clearBSS(void)
-    {
-        uint32_t *ptr=&__bss_start;
-        while(ptr<&__bss_end)
-            *ptr++ = 0;  
-    }
-    void initArray(void)
-    {
-        for(void **ptr = &__init_array_start;
-                   ptr < &__init_array_end;
-                   ptr++
-           )
-            ((InitFunc)*ptr)();
-
-    }
-    void enterMain(void)
-    {
-        main();
-    }
-
-    void finiArray(void)
-    {
-        for(void **ptr = &__fini_array_start;
-                   ptr < &__fini_array_end;
-                   ptr++
-            )
-            ((FiniFunc)*ptr)();
-
-    }
-    void disableInterrupts(void)
-    {
-        asm volatile ("cpsid f");
-    }
-    void loop(void)
-    {
-        while(1);
-    }
-
+    void init(void) __attribute__((section(".init"),naked));
     void init()
     {
         disableInterrupts();
+        frameSetup();
         clockSetup();
         copyData();
         clearBSS();
@@ -159,7 +179,7 @@ extern "C"
 
     VecFunc exceptionHandlers[] __attribute__ ((section(".vectors"))) = {
 
-        init/*,
+        init,
         NMI_Handler,
         HardFault_Handler,
         MemManage_Handler,
@@ -209,6 +229,6 @@ extern "C"
         CRCCU_Handler,
         ACC_Handler,
         UDP_Handler,
-        0*/
+        0
     };
 }

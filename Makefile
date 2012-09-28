@@ -13,7 +13,7 @@ ASFLAGS    := -Os -g\
 		      -mthumb \
 		      -I include \
 		      -D PLL_MUL=124 \
-		      -D PLL_DIV=38 \
+		      -D PLL_DIV=24 \
 		      -D F_XTAL=18432000ULL
 CFLAGS     := ${ASFLAGS} \
 		      -ffreestanding \
@@ -30,6 +30,8 @@ DEBUGGER   := ${PREFIX}gdb
 
 SOURCES    := $(wildcard ./src/*.c) $(wildcard ./src/*.cpp) $(wildcard ./src/*.S)
 OBJECTS    := $(foreach file, ${SOURCES}, ./build/$(notdir $(basename ${file})).o)
+
+.PHONY: openocd
 
 vpath %.c   ./src
 vpath %.S   ./src
@@ -59,8 +61,11 @@ sim: build
 	  -kernel ${TARGET} \
 	  -daemonize
 
+telnet:
+	telnet localhost 4444
+
 flash: ${TARGET_BIN}
-	openocd -f openocd/init.cfg -c "flash write_bank 0 ${TARGET_BIN} 0" -f openocd/shutdown.cfg
+	openocd -f openocd/init.cfg -c "at91sam3 gpnvm set 1" -c "flash write_bank 0 ${TARGET_BIN} 0" -f openocd/shutdown.cfg
 
 
 $(TARGET): 	${OBJECTS} | ./build
