@@ -15,6 +15,7 @@ ASFLAGS    := -Os -g\
 			  -I external \
 		      -D PLL_MUL=124 \
 		      -D PLL_DIV=24 \
+			  -D PRES_EXP=1 \
 		      -D F_XTAL=18432000ULL
 CFLAGS     := ${ASFLAGS} \
 		      -ffreestanding \

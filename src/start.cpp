@@ -70,7 +70,7 @@ void clockSetup(void)
     static const uint32_t cssMask       = 0x3 << 0;
     static const uint32_t cssMain       = 0x1 << 0;
     static const uint32_t cssPllA       = 0x2 << 0;
-    static const uint32_t pres2         = 0x1 << 4;
+    static const uint32_t pres2         = PRES_EXP << 4;
     static const uint32_t masterReady   = 0x1 << 3;
     static const uint32_t lockA         = 0x1 << 1;
     static const uint32_t pllOne        = 0x1 << 29;
