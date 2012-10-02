@@ -12,6 +12,7 @@ ASFLAGS    := -Os -g\
 	          -mcpu=cortex-m3 \
 		      -mthumb \
 		      -I include \
+			  -I external \
 		      -D PLL_MUL=124 \
 		      -D PLL_DIV=24 \
 		      -D F_XTAL=18432000ULL
