@@ -1,172 +1,46 @@
 #pragma once
 
-#include "../regmaps/local.h"
-#include "../common/frequency.h"
-//#include "../common/delay.h"
 #include <stdint.h>
+#include <arm-halib/arm/register.h>
+#include <arm-halib/arm/fcpu.h>
 
 namespace arm_halib{
-namespace drivers{
-
-    /** \brief UART Driver
-     *
-     *	For reading and writing single characters over a serial connection with and without interrupt support
-     **/
-    struct Uart
-    {
-        typedef uint32_t BaudRateType;
-        typedef uint8_t  DataBitType;
-        typedef uint8_t  StopBitType;
-
-        struct Parity
+namespace driver
+{
+        struct Uart0
         {
-            enum ParityType
+            Uart0()
             {
-                none = 0,
-                even = 1,
-                odd  = 2
-            };
-        };
-        typedef Parity::ParityType ParityType;
+                static const uint32_t rx0      = 1<<9;
+                static const uint32_t tx0      = 1<<10;
+                static const uint32_t uart0    = 1<<8;
+                static const uint32_t txEnable = 1<<6;
+                static const uint32_t noParity = 4<<9;
+                static Register* const pioADisableReg = reinterpret_cast<Register*>(0x400E0E04);
+                static Register* const pmcPeriEnableReg = reinterpret_cast<Register*>(0x400E0410);
+                static Register* const uart0ControlReg  = reinterpret_cast<Register*>(0x400E0600);
+                static Register* const uart0ModeReg     = reinterpret_cast<Register*>(0x400E0604);
+                static Register* const uart0BaudRateReg  = reinterpret_cast<Register*>(0x400E0620);
 
-        struct DefaultConfig
-        {
-            typedef regmaps::local::Uart0      RegMap;
-            typedef config::Frequency<F_CPU>   BaseClock;
-
-            static const bool         useInterrupt = false;
-            static const BaudRateType baudRate     = 9600;
-            static const DataBitType  dataBits     = 8;
-            static const StopBitType  stopBits     = 1;
-            static const ParityType   parity       = Parity::none;
-        };
-
-        template<typename Config = DefaultConfig>
-        struct configure
-        {
-            typedef typename Config::RegMap RegMap;
-            struct Core
-            {
-//                struct SleepSync
-//                {
-//                    void sync()
-//                    {
-//                        delay_us(12*1000000ULL/Config::baudRate);
-//                    }
-//                };
-
-                Core()
-                {
-                    UseRegMap(rm, RegMap);
-                    
-                    typedef          config::Frequency< Config::baudRate*16>          divider;
-                    typedef typename Config::BaseClock::template div< divider >::type UBBRConfig;
-
-                    //rm.ubbr  = (uint16_t)UBBRConfig::value - 1;
-                    /* Configure baudrate */
-                    /* Asynchronous, no oversampling */
-
-
-
-                    /* Configure PIO */
-
-                    /* Configure PMC */
-
-                    /* Reset and disable receiver & transmitter */
-                    rm.rstrx = true;
-                    rm.rsttx = true;
-                    SyncRegMap(rm);
-                    rm.rxdis = true;
-                    rm.txdis = true;
-                    SyncRegMap(rm);
-
-                    /* Configure mode */
-                    rm.par = 0;
-                    rm.chmode = 0;
-                    rm.brgr = (uint16_t)UBBRConfig::value;
-                    SyncRegMap(rm);
-
-                    /* Disable PDC channel */
-
-                    /* Enable receiver and transmitter */
-                    rm.rxen = true;
-                    rm.txen = true;
-
-                    SyncRegMap(rm);
-                }
-                
-                void put(const uint8_t c)
-                {
-                    UseRegMap(rm, RegMap);
-                    rm.thr = c;
-                    SyncRegMap(rm);
-                }
-
-                bool ready()
-                {
-                  UseRegMap(rm, RegMap);
-                  SyncRegMap(rm);
-                  return rm.sr.txrdy;
-                }
-                
-                /**	\brief	Reads a character from the input buffer
-                 *	\param	c	Reference to variable which shall store the character
-                 *	\return		true if a character was read
-                 */
-                bool get(uint8_t& c)
-                {
-                    UseRegMap(rm, RegMap);
-                    SyncRegMap(rm);
-                    if (rm.sr.rxrdy)
-                    {
-                        c = rm.rhr;
-                        return true;
-                    }else
-                        return false;
-                }
-            };
-            typedef Core type;
+                *pmcPeriEnableReg = uart0;
+                *pioADisableReg   = rx0 | tx0;
+                *uart0ControlReg  = txEnable;
+                *uart0ModeReg     = noParity;
+                *uart0BaudRateReg = F_CPU / 16 / 115200;
+            }
             
-            /*
-            struct InterruptExtension : public Core
+            bool ready() const
             {
-                //TODO Include interrupt manager support
+                static const uint32_t txEmpty  = 1<<9;
+                static Register* const uart0StatusReg = reinterpret_cast<Register*>(0x400E0614);
+                return (*uart0StatusReg & txEmpty);
+            }
 
-                void enableonReceive()
-                {	
-                    UseRegMap(rm, RegMap);
-                    rm.rxcie=true;
-                    SyncRegMap(rm);
-                }
-
-                void enableonReady()
-                {
-                    UseRegMap(rm, RegMap);
-                    rm.udrie=true;
-                    SyncRegMap(rm);
-                }
-                void disableonReceive()
-                {	
-                    UseRegMap(rm, RegMap);
-                    rm.rxcie=false;
-                    SyncRegMap(rm);
-                }
-
-                void disableonReady()
-                {
-                    UseRegMap(rm, RegMap);
-                    rm.udrie=false;
-                    SyncRegMap(rm);
-                }
-            };
-
-            typedef typename boost::mpl::if_c< Config::useInterrupt, 
-                                               InterruptExtension,
-                                               Core
-                                             >::type type;
-            };
-            */
-    };
-};
+            void put(uint8_t c)
+            {
+                static Register* const uart0TxBufReg = reinterpret_cast<Register*>(0x400E061C);
+                *uart0TxBufReg = c;
+            }
+        };
 }
 }
