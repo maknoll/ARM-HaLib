@@ -37,6 +37,7 @@ extern "C"
 typedef volatile uint32_t Register;
 
 inline void frameSetup(void)        __attribute__((always_inline));
+inline void watchdogDisable(void)   __attribute__((always_inline));
 inline void clockSetup(void)        __attribute__((always_inline));
 inline void copyData(void)          __attribute__((always_inline));
 inline void clearBSS(void)          __attribute__((always_inline));
@@ -50,6 +51,13 @@ inline void loop(void)              __attribute__((always_inline));
 void frameSetup(void)
 {
     asm volatile("mov r7,sp");
+}
+
+void watchdogDisable(void)
+{
+    static const uint32_t wdtDis = 1<<15;
+    static Register* const wdtMr = reinterpret_cast<Register*>(0x400E1454);
+    *wdtMr = wdtDis;
 }
 
 void clockSetup(void)
@@ -164,6 +172,7 @@ extern "C"
     void init()
     {
         disableInterrupts();
+        watchdogDisable();
         frameSetup();
         clockSetup();
         copyData();
