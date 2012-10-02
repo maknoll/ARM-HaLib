@@ -3,14 +3,33 @@
 #include <arm-halib/external/led.h>
 #include <arm-halib/common/delay.h>
 
+#include <logging/logging.h>
+
+using namespace ::logging;
 using namespace ::arm_halib;
 using external::Led;
 using driver::Uart0;
 using common::delay_ms;
 
+struct LogUart : public Uart0
+{
+    LogUart& operator<<(char c)
+    {
+        while(!ready());
+        put(c);
+    }
+};
+
+typedef OutputLevelSwitchDisabled <
+            OutputStream<
+                LogUart
+            > 
+        > LogType;
+
+LOGGING_DEFINE_OUTPUT(LogType);
+
 Led<17> yellow;
 Led<18> green;
-Uart0 uart;
 
 int main() 
 {
@@ -19,10 +38,10 @@ int main()
     if(*clkStatusReg & xtalStable)
         yellow.toggle();
 
+    unsigned int i=0;
     while(true)
     {
-        uart.put('A');
-        while(!uart.ready());
+        log::emit() << "Toggle Led: " << i++ << log::endl;
         green.toggle();
         delay_ms(1000);
     }
