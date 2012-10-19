@@ -22,10 +22,11 @@ CFLAGS     := ${ASFLAGS} \
 		      -nostdlib \
 		      -fno-strict-aliasing \
 		      -fno-exceptions \
-		      -fno-threadsafe-statics
+		      -fno-threadsafe-statics \
+			  -ffunction-sections
 CXXFLAGS   := ${CFLAGS} \
  		      -fno-rtti
-LDFLAGS    := -T ldscripts/link.ld
+LDFLAGS    := -T ldscripts/link.ld --gc
 LDPATHS    := 
 LIBS       := 
 DEBUGGER   := ${PREFIX}gdb
