@@ -43,5 +43,6 @@ DEFAULT_OBJDMP_FLAGS  := -Cdx
 DEFAULT_LDFLAGS := --gc
 
 HALIB_LIB_DIR   := ${HALIB_DIR}/lib
+HALIB_BUILD_DIR := ${HALIB_DIR}/build
 HALIB_INC       := ${HALIB_DIR}/include
 EXT_INC         := ${HALIB_DIR}/external

@@ -1,4 +1,4 @@
-PLATFORM := deRFusb
+PLATFORM := stellaris
 
 ASFLAGS  := -Os -g -Wall
 CFLAGS   := -Os -g -Wall

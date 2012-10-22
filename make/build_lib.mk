@@ -12,7 +12,7 @@ PLATFORM_OBJECTS := common start
 
 PLATFORM_OBJECTS := $(addprefix ${BUILD}/, $(addsuffix .o, ${PLATFORM_OBJECTS}))
 
-GEN_DIRS += ${HALIB_LIB_DIR}
+GEN_DIRS += ${HALIB_LIB_DIR} ${BUILD}
 
 ASFLAGS  += -Os -g
 CFLAGS   += -Os -g
