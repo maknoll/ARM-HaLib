@@ -1,9 +1,9 @@
 .PHONY: %.debug
 
-LM4TOOLS := ${HALIB_DIR}/external/lm4tools
-LMICDI   := ${LM4TOOLS}/lmicdiusb/lmicdi
+LM4TOOLS  := ${HALIB_DIR}/external/lm4tools
+LMICDI    := ${LM4TOOLS}/lmicdiusb/lmicdi
 
-${LMICDI}:
+${LMICDI}: submodules
 	${MAKE} -C $(dir ${LMICDI})
 
 %.program: ${BIN}/%.bin ${LM4FLASH}

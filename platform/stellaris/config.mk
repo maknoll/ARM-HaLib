@@ -25,5 +25,6 @@ PLATFORM_CXXFLAGS  := ${PLATFORM_ASFLAGS}
 
 PLATFORM_LDFLAGS   := -T ${PLATFORM_DIR}/link.ld
 
+include ${HALIB_DIR}/make/submodules.mk
 include ${PLATFORM_DIR}/flash.mk
 include ${PLATFORM_DIR}/debug.mk
