@@ -1,9 +1,12 @@
 HALIB_DIR :=$(abspath $(dir $(lastword ${MAKEFILE_LIST})))
 
+#DISTCLEAN += ${HALIB_DIR}/external/lm4tools
+
 .PHONY: proxy
 
 proxy: help
 
+include ${HALIB_DIR}/make/defaults.mk
 include ${HALIB_DIR}/make/lib.mk
 
 .PHONY: help all ${PLATFORMS} distclean
@@ -16,4 +19,4 @@ all: ${PLATFORMS}
 clean:
 
 distclean:
-	@echo ${DISTCLEAN_CMD}
+	rm -rf ${DISTCLEAN}

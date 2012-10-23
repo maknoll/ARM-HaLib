@@ -1,8 +1,5 @@
 HALIB_DIR := $(abspath $(dir $(lastword ${MAKEFILE_LIST}))/..)
 
-include ${HALIB_DIR}/make/defaults.mk
-include ${HALIB_DIR}/platform/${PLATFORM}/config.mk
-
 BIN     ?= ./bin
 BUILD   ?= ./build
 SRC     ?= ./src
@@ -12,6 +9,13 @@ DISTCLEAN += ./bin ./build
 
 BIN     := ${BIN}/${PLATFORM}
 BUILD   := ${BUILD}/${PLATFORM}
+
+.PHONY: proxy
+
+proxy: help
+
+include ${HALIB_DIR}/make/defaults.mk
+include ${HALIB_DIR}/platform/${PLATFORM}/config.mk
 
 SOURCES := $(wildcard ${SRC}/*.c) $(wildcard ${SRC}/*.cpp) $(wildcard ${SRC}/*.S)
 
@@ -42,5 +46,3 @@ ${BIN}/%.elf: ${BUILD}/%.o ${PLATFORM_LIB} ${MAKEFILE_LIST} | ${BIN}
 
 ${TARGET_DUMPS}: %.dump: ${BIN}/%.elf ${MAKEFILE_LIST}
 	${OBJDMP} ${OBJDMP_FLAGS} $< > $@
-
-include ${HALIB_DIR}/make/openocd.mk

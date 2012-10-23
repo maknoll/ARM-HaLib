@@ -1,3 +1,6 @@
 [submodule "libsam3s"]
 	path = libsam3s
 	url = git://github.com/maknoll/libsam3s.git
+[submodule "external/lm4tools"]
+	path = external/lm4tools
+	url = git://github.com/utzig/lm4tools.git
