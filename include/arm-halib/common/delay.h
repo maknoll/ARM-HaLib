@@ -3,39 +3,39 @@
 #include <stdint.h>
 #include <arm-halib/arm/register.h>
 #include <arm-halib/arm/fcpu.h>
+#include <arm-halib/arm/locking.h>
+
+extern "C" volatile uint32_t sysTickHigh;
 
 namespace arm_halib{
 namespace driver
 {
     struct SysTickTimer
     {
-        static void wait(uint64_t value, bool div8 = true)
+        static uint64_t time()
         {
-            static const uint32_t enable     = 1<<0;
-            static const uint32_t intEnable  = 1<<1;
-            static const uint32_t notClkDiv8 = 1<<2;
-            static const uint32_t zeroFlag   = 1<<16;
-            static Register* const ctrlReg   = reinterpret_cast<Register*>(0xE000E010);
-            static Register* const reloadReg = reinterpret_cast<Register*>(0xE000E014);
-            
-            *reloadReg = value/(div8?8:1);
-            *ctrlReg   = enable | (div8?0:notClkDiv8);
-            while(!(*ctrlReg & zeroFlag));
-            *ctrlReg   = 0;
+            GlobalInterruptLock lock;
+            static Register* const valueReg = reinterpret_cast<Register*>(0xE000E018);
+            uint64_t now = sysTickHigh;
+            now <<=24;
+            now |= *valueReg;
+            return now;
         }
     };
 }
 
 namespace common
 {
-    inline void delay_us(uint16_t value)
-    {
-        driver::SysTickTimer::wait(F_CPU/1000000*value, false);
+    inline void delay_us(uint16_t value) 
+    { 
+        uint64_t then = driver::SysTickTimer::time() -F_CPU/1000000/8*value;
+        while(driver::SysTickTimer::time() > then);
     }
 
     inline void delay_ms(uint16_t value)
     {
-        driver::SysTickTimer::wait(F_CPU/1000*value);
+        uint64_t then = driver::SysTickTimer::time() -F_CPU/1000/8*value;
+        while(driver::SysTickTimer::time() > then);
     }
 }
 }
