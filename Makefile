@@ -20,3 +20,4 @@ clean:
 
 distclean:
 	rm -rf ${DISTCLEAN}
+	${MAKE} -C ./examples distclean
