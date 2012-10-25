@@ -33,7 +33,7 @@ DEBUGGER   := ${PREFIX}gdb
 SOURCES    := $(wildcard ./src/*.c) $(wildcard ./src/*.cpp) $(wildcard ./src/*.S)
 OBJECTS    := $(foreach file, ${SOURCES}, ./build/$(notdir $(basename ${file})).o)
 
-.PHONY: openocd
+.PHONY: openocd doc
 
 vpath %.c   ./src
 vpath %.S   ./src
@@ -69,6 +69,8 @@ telnet:
 flash: ${TARGET_BIN}
 	openocd -f openocd/init.cfg -c "at91sam3 gpnvm set 1" -c "flash write_bank 0 ${TARGET_BIN} 0" -f openocd/shutdown.cfg
 
+doc:
+	doxygen doc/Doxyfile
 
 $(TARGET): 	${OBJECTS} | ./build
 	$(LD) ${LDFLAGS} -o $@  $^ ${LDPATHS} ${LIBS}
