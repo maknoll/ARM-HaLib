@@ -39,6 +39,7 @@ typedef volatile uint32_t Register;
 inline void frameSetup(void)        __attribute__((always_inline));
 inline void watchdogDisable(void)   __attribute__((always_inline));
 inline void clockSetup(void)        __attribute__((always_inline));
+inline void sysTickSetup(void)      __attribute__((always_inline));
 inline void copyData(void)          __attribute__((always_inline));
 inline void clearBSS(void)          __attribute__((always_inline));
 inline void initArray(void)         __attribute__((always_inline));
@@ -120,6 +121,16 @@ void clockSetup(void)
     
 }
 
+void sysTickSetup()
+{
+    static Register* const ctrlReg   = reinterpret_cast<Register*>(0xE000E010);
+    static Register* const reloadReg = reinterpret_cast<Register*>(0xE000E014);
+    static const uint32_t enable    = 0x1 << 0;
+    static const uint32_t interrupt = 0x1 << 1;
+    *reloadReg = 0xFFFFFF;
+    *ctrlReg   = enable | interrupt;
+}
+
 void copyData(void)
 {
     uint32_t* srcPtr=&__data_start;
@@ -171,10 +182,11 @@ extern "C"
     void init(void) __attribute__((section(".init"),naked));
     void init()
     {
-        disableInterrupts();
+//        disableInterrupts();
         watchdogDisable();
         frameSetup();
         clockSetup();
+        sysTickSetup();
         copyData();
         clearBSS();
         initArray();
@@ -182,6 +194,13 @@ extern "C"
         finiArray();
         disableInterrupts();
         loop();
+    }
+
+    volatile uint32_t sysTickHigh=0xFFFFFFFF;
+
+    void tick()
+    {
+        sysTickHigh--;
     }
     
     StackPtr tos __attribute__((section(".tos"))) = (StackPtr)&__end;
@@ -202,7 +221,7 @@ extern "C"
         DebugMon_Handler,
         0,
         PendSV_Handler,
-        SysTick_Handler,
+        tick,
         SUPC_Handler,
         RSTC_Handler,
         RTC_Handler,
