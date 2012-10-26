@@ -2,9 +2,9 @@
 
 extern "C" void badInterrupt(void)
 {
-    *(volatile uint32_t*)0x400E0E00 = 0x1<< 19;
+/*    *(volatile uint32_t*)0x400E0E00 = 0x1<< 19;
     *(volatile uint32_t*)0x400E0E10 = 0x1<< 19;
-    *(volatile uint32_t*)0x400E0E34 = 0x1<< 19;
+    *(volatile uint32_t*)0x400E0E34 = 0x1<< 19;*/
     while(1);
 }
 
@@ -30,8 +30,7 @@ extern "C"
     extern void* __init_array_end;
     extern void* __fini_array_start;
     extern void* __fini_array_end;
-
-    int main(void);
+    extern int main(void);
 }
 
 typedef volatile uint32_t Register;
@@ -44,7 +43,6 @@ inline void copyData(void)          __attribute__((always_inline));
 inline void clearBSS(void)          __attribute__((always_inline));
 inline void initArray(void)         __attribute__((always_inline));
 inline void enterMain(void)         __attribute__((always_inline));
-
 inline void finiArray(void)         __attribute__((always_inline));
 inline void disableInterrupts(void) __attribute__((always_inline));
 inline void loop(void)              __attribute__((always_inline));
@@ -127,8 +125,9 @@ void sysTickSetup()
     static Register* const reloadReg = reinterpret_cast<Register*>(0xE000E014);
     static const uint32_t enable    = 0x1 << 0;
     static const uint32_t interrupt = 0x1 << 1;
+    static const uint32_t useSystemClock = 0x1 << 2;
     *reloadReg = 0xFFFFFF;
-    *ctrlReg   = enable | interrupt;
+    *ctrlReg   = enable | interrupt;// | useSystemClock;
 }
 
 void copyData(void)
@@ -177,15 +176,13 @@ void loop(void)
     while(1);
 }
 
-extern "C"
-{
     void init(void) __attribute__((section(".init"),naked));
     void init()
     {
 //        disableInterrupts();
-        watchdogDisable();
+//        watchdogDisable();
         frameSetup();
-        clockSetup();
+//        clockSetup();
         sysTickSetup();
         copyData();
         clearBSS();
@@ -208,55 +205,18 @@ extern "C"
     VecFunc exceptionHandlers[] __attribute__ ((section(".vectors"))) = {
 
         init,
-        NMI_Handler,
-        HardFault_Handler,
-        MemManage_Handler,
-        BusFault_Handler,
-        UsageFault_Handler,
-        0,
-        0, 
-        0, 
-        0,
-        SVC_Handler,
-        DebugMon_Handler,
-        0,
-        PendSV_Handler,
-        tick,
-        SUPC_Handler,
-        RSTC_Handler,
-        RTC_Handler,
-        RTT_Handler,
-        WDT_Handler,
-        PMC_Handler,
-        EFC_Handler,
-        0,
-        UART0_Handler,
-        UART1_Handler,
-        SMC_Handler,
-        PIOA_Handler,
-        PIOB_Handler,
-        PIOC_Handler,
-        USART0_Handler,
-        USART1_Handler,
-        0,
-        0,
-        HSMCI_Handler,
-        TWI0_Handler,
-        TWI1_Handler,
-        SPI_Handler,
-        SSC_Handler,
-        TC0_Handler,
-        TC1_Handler,
-        TC2_Handler,
-        TC3_Handler,
-        TC4_Handler,
-        TC5_Handler,
-        ADC_Handler,
-        DACC_Handler,
-        PWM_Handler,
-        CRCCU_Handler,
-        ACC_Handler,
-        UDP_Handler,
-        0
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        badInterrupt,
+        tick
     };
-}
