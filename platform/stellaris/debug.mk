@@ -1,14 +1,6 @@
+CLEAN += openocd.log
+
 .PHONY: %.debug
 
-LM4TOOLS  := ${HALIB_DIR}/external/lm4tools
-LMICDI    := ${LM4TOOLS}/lmicdiusb/lmicdi
-
-${LMICDI}: submodules
-	${MAKE} -C $(dir ${LMICDI})
-
-%.program: ${BIN}/%.bin ${LM4FLASH}
-	${LM4FLASH} $<
-
-%.debug: ${BIN}/%.elf ${LMICDI}
-	${LMICDI} &
-	${DBG} $<
+%.debug: ${BIN}/%.elf
+	${DBG} -ex "target remote | openocd -f ${PLATFORM_DIR}/openocd.cfg -p -c 'log_output openocd.log'" $<
