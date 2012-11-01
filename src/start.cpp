@@ -1,19 +1,18 @@
 #include <stdint.h>
+#include <arm-halib/core/register.h>
+#include <arm-halib/driver/sysTickTimerDef.h>
 
-extern "C" void badInterrupt(void)
-{
-/*    *(volatile uint32_t*)0x400E0E00 = 0x1<< 19;
-    *(volatile uint32_t*)0x400E0E10 = 0x1<< 19;
-    *(volatile uint32_t*)0x400E0E34 = 0x1<< 19;*/
-    while(1);
-}
+using arm_halib::Register;
+using arm_halib::driver::SysTickTimer;
 
-#include "arm-halib/arm/exceptions.h"
+#include <exceptions.h>
 
 typedef void* StackPtr;
 
 typedef void(*InitFunc)(void);
 typedef void(*FiniFunc)(void);
+
+
 
 extern "C"
 {
@@ -32,8 +31,6 @@ extern "C"
     extern void* __fini_array_end;
     extern int main(void);
 }
-
-typedef volatile uint32_t Register;
 
 inline void frameSetup(void)        __attribute__((always_inline));
 inline void watchdogDisable(void)   __attribute__((always_inline));
@@ -119,17 +116,6 @@ void clockSetup(void)
     
 }
 
-void sysTickSetup()
-{
-    static Register* const ctrlReg   = reinterpret_cast<Register*>(0xE000E010);
-    static Register* const reloadReg = reinterpret_cast<Register*>(0xE000E014);
-    static const uint32_t enable    = 0x1 << 0;
-    static const uint32_t interrupt = 0x1 << 1;
-    static const uint32_t useSystemClock = 0x1 << 2;
-    *reloadReg = 0xFFFFFF;
-    *ctrlReg   = enable | interrupt;// | useSystemClock;
-}
-
 void copyData(void)
 {
     uint32_t* srcPtr=&__data_start;
@@ -176,47 +162,21 @@ void loop(void)
     while(1);
 }
 
-    void init(void) __attribute__((section(".init"),naked));
-    void init()
-    {
-//        disableInterrupts();
-//        watchdogDisable();
-        frameSetup();
-//        clockSetup();
-        sysTickSetup();
-        copyData();
-        clearBSS();
-        initArray();
-        enterMain();
-        finiArray();
-        disableInterrupts();
-        loop();
-    }
+extern "C" void init(void) __attribute__((section(".init"),naked));
+void init()
+{
+//    disableInterrupts();
+    watchdogDisable();
+    frameSetup();
+//    clockSetup();
+    SysTickTimer::init();
+    copyData();
+    clearBSS();
+    initArray();
+    enterMain();
+    finiArray();
+    disableInterrupts();
+    loop();
+}
 
-    volatile uint32_t sysTickHigh=0xFFFFFFFF;
-
-    void tick()
-    {
-        sysTickHigh--;
-    }
-    
-    StackPtr tos __attribute__((section(".tos"))) = (StackPtr)&__end;
-
-    VecFunc exceptionHandlers[] __attribute__ ((section(".vectors"))) = {
-
-        init,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        badInterrupt,
-        tick
-    };
+StackPtr tos __attribute__((section(".tos"))) = (StackPtr)&__end;

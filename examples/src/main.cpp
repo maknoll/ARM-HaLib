@@ -1,12 +1,12 @@
 #include <stdint.h>
-#include <arm-halib/arm/register.h>
-#include <arm-halib/common/delay.h>
-#include <arm-halib/external/led.h>
+#include <arm-halib/core/register.h>
+#include <arm-halib/core/delay.h>
+#include <gpio.h>
 
 using arm_halib::Register;
-using arm_halib::common::delay_ms;
-using arm_halib::common::delay_us;
-using arm_halib::external::Led;
+using arm_halib::delay_ms;
+using arm_halib::delay_us;
+using arm_halib::driver::GpioF;
 
 /*#include <arm-halib/arm/uart.h>
 
@@ -53,30 +53,28 @@ int main()
     Register* gpioHP = (Register*)0x400FE06C;
     *gpioHP    = 0xff;
     *gpioClock = 0xff;
-//    delay_us(1);
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
+    delay_us(1);
     Register* gpioFData = (Register*)(0x4005D000);
     Register* gpioFDir  = (Register*)0x4005D400;
     Register* gpioFDigEn= (Register*)0x4005D51C;
     
-    *gpioFDir = 0xff;
-    *gpioFDigEn= 0xff;
-    gpioFData[0xFF] = 0xff;
+    *gpioFDir = 0xe;
+    *gpioFDigEn= 0xe;
     
-//    unsigned int i=0;
+    uint8_t pwm = 1;
+
     while(true)
     {
-        
-//        log::emit() << "Toggle Led: " << i++ << log::endl;
-//        green.toggle();*/
-        delay_ms(1000);
-        gpioFData[0xFF] = 0x0;
-        delay_ms(1000);
-        gpioFData[0xFF] = 0xffffffff;
+        for(uint8_t i=0;i<8;i++)
+        {
+            for(uint8_t j=0;j<100;j++)
+            {
+                gpioFData[0xe] = i<<1;
+                delay_us(pwm*100);
+                gpioFData[0xe] = 0;
+                delay_us((100-pwm)*100);
+            }
+        }
     }
 
     return 0;

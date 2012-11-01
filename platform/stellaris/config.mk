@@ -10,14 +10,16 @@ PLATFORM_LIB       := ${HALIB_LIB_DIR}/lib${PLATFORM}.a
 LDPATHS            += ${HALIB_LIB_DIR}
 LIBS               += ${PLATFORM}
 
-INCLUDE            := ${PLATFORM_DIR}/include
+INCLUDE            := ${PLATFORM_DIR}/include \
+					  ${HALIB_DIR}/include/arm-halib/lm4f
 
 PLATFORM_ASFLAGS   := -mcpu=cortex-m4                   \
 		              -mthumb                           \
 			          -D PLL_MUL=${PLL_MULTIPLICATOR}   \
 		              -D PLL_DIV=${PLL_DIVISOR}         \
 			          -D PRES_EXP=${PRESCALER_EXPONENT} \
-		              -D F_XTAL=${CRYSTAL_FREQUENCY}
+		              -D F_XTAL=${CRYSTAL_FREQUENCY}    \
+					  -D _ARM_LM4F_                     \
 
 PLATFORM_CFLAGS    := ${PLATFORM_ASFLAGS}
 
