@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace arm_halib{
 namespace driver
 {

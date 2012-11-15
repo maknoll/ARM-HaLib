@@ -1,12 +1,12 @@
 #include <stdint.h>
 #include <arm-halib/core/register.h>
 #include <arm-halib/core/delay.h>
-#include <gpio.h>
+//#include <gpio.h>
 
 using arm_halib::Register;
 using arm_halib::delay_ms;
 using arm_halib::delay_us;
-using arm_halib::driver::GpioF;
+//using arm_halib::driver::GpioF;
 
 /*#include <arm-halib/arm/uart.h>
 

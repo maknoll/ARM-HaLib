@@ -5,14 +5,10 @@
 using arm_halib::Register;
 using arm_halib::driver::SysTickTimer;
 
-#include <exceptions.h>
-
 typedef void* StackPtr;
 
 typedef void(*InitFunc)(void);
 typedef void(*FiniFunc)(void);
-
-
 
 extern "C"
 {
@@ -165,8 +161,8 @@ void loop(void)
 extern "C" void init(void) __attribute__((section(".init"),naked));
 void init()
 {
-//    disableInterrupts();
-    watchdogDisable();
+    disableInterrupts();
+//    watchdogDisable();
     frameSetup();
 //    clockSetup();
     SysTickTimer::init();

@@ -40,7 +40,7 @@ DEFAULT_OBJCPY_FLAGS := -O binary \
 
 DEFAULT_OBJDMP_FLAGS  := -Cdx
 
-DEFAULT_LDFLAGS := --gc-sections -u init
+DEFAULT_LDFLAGS := --gc-sections -u init -u exceptions
 
 HALIB_LIB_DIR   := ${HALIB_DIR}/lib
 HALIB_BUILD_DIR := ${HALIB_DIR}/build
