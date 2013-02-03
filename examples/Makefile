@@ -1,8 +1,6 @@
 PLATFORM := stellaris
 #PLATFORM := deRFusb
 
-ASFLAGS  := -Os -g -Wall
-CFLAGS   := -Os -g -Wall
-CXXFLAGS := -Os -g -Wall
+CXXFLAGS := -Os -g -Wall -fno-inline
 
 include ../make/singleObjectApp.mk

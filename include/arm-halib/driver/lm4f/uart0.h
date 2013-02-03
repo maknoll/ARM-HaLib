@@ -4,13 +4,31 @@
 #include <arm-halib/core/register.h>
 #include <arm-halib/core/fcpu.h>
 #include "gpio.h"
+#include <arm-halib/regmaps/local.h>
 
 namespace arm_halib{
 namespace driver
 {
         struct Uart0
         {
-            Gpio<0> gpioA;
+            struct RxConfig
+            {
+                typedef arm_halib::regmaps::local::GpioBank<arm_halib::regmaps::local::GpioBanks::a> RegMap;
+                static const uint8_t pin = 0;
+                static const bool output = false;
+                static const bool special = true;
+                static const uint8_t specialSource = 0x1;
+            };
+            struct TxConfig
+            {
+                typedef arm_halib::regmaps::local::GpioBank<arm_halib::regmaps::local::GpioBanks::a> RegMap;
+                static const uint8_t pin = 1;
+                static const bool output = true;
+                static const bool special = true;
+                static const uint8_t specialSource = 0x1;
+            };
+            GpioPin<RxConfig> rx;
+            GpioPin<TxConfig> tx;
             static const uint32_t enable           = 0x1;
             static const uint32_t txEnable         = 0x100;
             static const uint32_t rxEnable         = 0x200;
@@ -58,7 +76,7 @@ namespace driver
                 };
             };
 
-            Uart0() : gpioA(0x3, 0x2, 0x3)
+            Uart0()
             {
                 UartRegMap& rm = *static_cast<UartRegMap*>(0);
                 rm.clockEnable             = 0x01;
