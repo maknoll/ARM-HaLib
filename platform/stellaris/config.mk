@@ -11,17 +11,17 @@ LDPATHS            += ${HALIB_LIB_DIR}
 LIBS               += ${PLATFORM}
 
 PLATFORM_INCLUDES  := ${PLATFORM_DIR}/include \
-		      ${HALIB_DIR}/include/arm-halib/driver/lm4f
+                      ${HALIB_DIR}/include/arm-halib/driver/lm4f
 
 vpath %.cpp ${HALIB_DIR}/src/lm4f/
 
 PLATFORM_ASFLAGS   := -mcpu=cortex-m4                   \
-		      -mthumb                           \
-		      -D PLL_MUL=${PLL_MULTIPLICATOR}   \
-		      -D PLL_DIV=${PLL_DIVISOR}         \
-		      -D PRES_EXP=${PRESCALER_EXPONENT} \
-		      -D F_XTAL=${CRYSTAL_FREQUENCY}    \
-	              -D _ARM_LM4F_
+                      -mthumb                           \
+                      -D PLL_MUL=${PLL_MULTIPLICATOR}   \
+                      -D PLL_DIV=${PLL_DIVISOR}         \
+                      -D PRES_EXP=${PRESCALER_EXPONENT} \
+                      -D F_XTAL=${CRYSTAL_FREQUENCY}    \
+                      -D __ARM_LM4F__
 
 PLATFORM_CFLAGS    := ${PLATFORM_ASFLAGS}
 

@@ -20,22 +20,21 @@ AR     := ${PREFIX}${AR}
 
 DEFAULT_ARFLAGS  := 
 
-DEFAULT_ASFLAGS  := -Os \
-	                -g
+DEFAULT_ASFLAGS  := 
 
 DEFAULT_CFLAGS   := ${ASFLAGS}              \
-	                -ffreestanding          \
-		            -nostdlib               \
-		            -fno-strict-aliasing    \
-		            -fno-exceptions         \
-		            -fno-threadsafe-statics \
-			        -ffunction-sections
+                    -ffreestanding          \
+                    -nostdlib               \
+                    -fno-strict-aliasing    \
+                    -fno-exceptions         \
+                    -fno-threadsafe-statics \
+                    -ffunction-sections
 
 DEFAULT_CXXFLAGS := ${DEFAULT_CFLAGS} \
-					-fno-rtti
+                    -fno-rtti
 
 DEFAULT_OBJCPY_FLAGS := -O binary \
-	                    -j .text  \
+                        -j .text  \
                         -j .data
 
 DEFAULT_OBJDMP_FLAGS  := -Cdx
