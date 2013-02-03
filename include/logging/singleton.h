@@ -3,11 +3,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void* operator new(size_t, void* ptr)
-{
-    return ptr;
-}
-
 /**\brief A general implementation of the singleton concept
  * \tparam T the type to declare singleton
  *
@@ -24,6 +19,9 @@ class singleton : public T
 		singleton(){};
 		/**\brief no copy constructor**/
 		singleton(const singleton&);
+
+    static T content;
+
 	public:
 
 		/**\brief Return an instance of this singleton class
@@ -35,13 +33,9 @@ class singleton : public T
 		 **/
 		static singleton& instance()
 		{
-            static uint8_t instance[sizeof(T)];
-            static bool constructed=false;
-            if(!constructed)
-            {
-                new(instance) T();
-                constructed=true;
-            }
-			return *reinterpret_cast<singleton*>(instance);
+      return static_cast<singleton&>(content);
 		}
 };
+
+template<typename T>
+T singleton<T>::content;
