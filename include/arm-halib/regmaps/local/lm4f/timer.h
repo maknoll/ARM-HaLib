@@ -56,7 +56,7 @@ namespace lm4f
 
                             struct
                             {
-                                uint8_t __offset3[0x8];
+                                uint8_t __offset3[0x28];
                                 uint32_t interval;
                             };
 
