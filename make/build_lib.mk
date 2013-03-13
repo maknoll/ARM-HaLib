@@ -8,7 +8,7 @@ ARFLAGS  += ${PLATFORM_ARFLAGS} ${DEFAULT_ARFLAGS}
 BUILD := ${HALIB_DIR}/build/${PLATFORM}
 SRC   := ${HALIB_DIR}/src
 
-PLATFORM_OBJECTS := common start
+PLATFORM_OBJECTS += common start exceptions hwInit
 
 PLATFORM_OBJECTS := $(addprefix ${BUILD}/, $(addsuffix .o, ${PLATFORM_OBJECTS}))
 

@@ -24,16 +24,16 @@ ${GEN_DIRS}: %:
 	mkdir -p $@
 
 ${BUILD}/%.o: %.c ${MAKEFILE_LIST} | ${BUILD}
-	$(CC) ${CFLAGS} -MT $@ -MM -o $@.d $< ${INCLUDES}
-	$(CC) ${CFLAGS} -c -o $@ $< ${INCLUDES}
+	$(CC) ${CFLAGS} ${INCLUDES} -MT $@ -MM -o $@.d $< 
+	$(CC) ${CFLAGS} ${INCLUDES} -c -o $@ $< 
 
 ${BUILD}/%.o: %.cpp ${MAKEFILE_LIST} | ${BUILD}
-	$(CXX) ${CXXFLAGS} -MT $@ -MM -o $@.d $< ${INCLUDES}
-	$(CXX) ${CXXFLAGS} -c -o $@ $< ${INCLUDES}
+	$(CXX) ${CXXFLAGS} ${INCLUDES} -MT $@ -MM -o $@.d $< 
+	$(CXX) ${CXXFLAGS} ${INCLUDES} -c -o $@ $< 
 
 ${BUILD}/%.o: %.S ${MAKEFILE_LIST} | ${BUILD}
-	$(AS) ${ASFLAGS} -MT $@ -MM -o $@.d $< ${INCLUDES}
-	$(AS) ${ASFLAGS} -c -o $@ $< ${INCLUDES}
+	$(AS) ${ASFLAGS} ${INCLUDES} -MT $@ -MM -o $@.d $< 
+	$(AS) ${ASFLAGS} ${INCLUDES} -c -o $@ $< 
 
 clean:
 	rm -rf ${CLEAN}

@@ -6,6 +6,7 @@ PRESCALER_EXPONENT := 1
 CRYSTAL_FREQUENCY  := 18432000ULL
 
 PLATFORM_LIB       := ${HALIB_LIB_DIR}/lib${PLATFORM}.a
+PLATFORM_INCLUDES  := ${HALIB_DIR}/include/arm-halib/driver/at91sam3 ${PLATFORM_DIR}/include
 
 LDPATHS            += ${HALIB_LIB_DIR}
 LIBS               += ${PLATFORM}
